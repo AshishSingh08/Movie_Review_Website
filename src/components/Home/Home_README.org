@@ -1,0 +1,220 @@
+#+title: Home_readme
+#+AUTHOR: Aditya Yadav
+
+* Home page
+** Import
+*** React
+Importing React libary so that we can use JSX and other react functions.
+#+begin_src js
+import React from 'react';
+#+end_src
+*** Config
+Importing dimension for the images to use to display images on the page.
+#+begin_src js
+// Config
+import { POSTER_SIZE, BACKDROP_SIZE, IMAGE_BASE_URL } from './../../config';
+#+end_src
+*** Components
+Importing components which are required for the home page.
++ Banner Image the Top to Big Images that are visible on the top
++ Grid determines the layout of the list of movies
++ Thumbnail Determins how the movies are displayed in the layout
++ Spinner is the loading wheel which is seen when ever there is a delay to get the infomation
+  from the API
++ Button is the "Load More" button seen at the bottom which request the hook to fetch more movie.
++ SearchBar is the search bar in the middle which send search query to the hook.
+#+begin_src js
+// Components
+import BannerImage from './BannerImage';
+import Grid from './../Common/Grid';
+import Thumbnail from './../Common/Thumbnail';
+import Spinner from './../Common/Spinner'
+import Button from './../Common/Button';
+import Searchbar from './SearchBar';
+#+end_src
+*** Hooks
+Importing hook which will fetch data as well as trigger the re-render of the page.
+#+begin_src js
+// Hook
+import { useHomeFetch } from './../../hooks/useHomeFetch';
+#+end_src
+*** No image
+Importing the image to show whenever there is an error.
+#+begin_src js
+// Image
+import NoImage from '../../images/no_image.jpg';
+#+end_src
+** Main body
+*** Home Component
+Here we are defining a Component which is called home which contains the layout and the functions for the
+home page to work
+#+begin_src js
+const Home = () => {
+#+end_src
+*** Home Fetch Hook
+[[file:../../hooks/useHomeFetch_README.org][Use Home Fetch]]
+Here we are using a hook which will get the movies from the API on it execution and it returns the state, loading, error, setSearchTerm, searchTerm, setIsLoadinMore which are variable which we will use further ahead
+#+begin_src js
+  const { state, loading, error, setSearchTerm, searchTerm, setIsLoadinMore } = useHomeFetch();
+#+end_src
+*** Error checking
+Here we are checking the error variable from the useHomefetch hook to see if there were any problem in fetching movies from the API.
+#+begin_src js
+  if(error) return(<div>Something Went Wrong ...</div>)
+#+end_src
+*** Random number
+Here we are generating two random number so that the banner image change on a reload of the page/
+(Also we are cheching if the two number are equal and chaning them so that the both banner don't have the
+same image)
+#+begin_src js
+
+  function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+  }
+
+  let banner1=getRandomInt(0,19);
+  let banner2=getRandomInt(0,19);
+  if(banner1===banner2)
+    banner2++;
+#+end_src
+*** Home Page layout
+Here we are returing a structure of the page in JSX to the Component Home.
+#+begin_src js
+  return (
+    <>
+      {!searchTerm && state.results[banner1] && state? (
+        <BannerImage
+          clickable={true}
+          movieId={state.results[banner1].id}
+          image={`${IMAGE_BASE_URL}${BACKDROP_SIZE}${state.results[banner1].backdrop_path}`}
+          title={state.results[banner1].original_title}
+          text={state.results[banner1].overview}
+          release_date={state.results[banner1].release_date}
+          vote_count={state.results[banner1].vote_count}
+          stars={state.results[banner1].vote_average}
+        />
+      ) : null}
+      {!searchTerm && state.results[banner2] ? (
+        <BannerImage
+          clickable={true}
+          movieId={state.results[banner2].id}
+          image={`${IMAGE_BASE_URL}${BACKDROP_SIZE}${state.results[banner2].backdrop_path}`}
+          title={state.results[banner2].original_title}
+          text={state.results[banner2].overview}
+          release_date={state.results[banner2].release_date}
+          vote_count={state.results[banner2].vote_count}
+          stars={state.results[banner2].vote_average}
+        />
+      ) : null}
+      <Searchbar setSearchTerm={setSearchTerm}/>
+      <Grid header={searchTerm ? 'Search Result' : 'Popular Movies'}>
+        {state.results.map(
+          movie => (
+          <Thumbnail key={movie.id}
+            clickable={true}
+            image={
+              movie.poster_path ? `${IMAGE_BASE_URL}${POSTER_SIZE}${movie.poster_path}`: NoImage
+            }
+            movieId={movie.id}
+          />
+          ))}
+      </Grid>
+      {loading && <Spinner />}
+      {state.page < state.total_pages && !loading && (
+        <Button text='Load More' callback={() => setIsLoadinMore(true)}/>
+      )}
+
+    </>
+  );
+};
+#+end_src
+**** Banner Images
+Here we are using the banner image tag to display the top to banner in the home page
++ It is checking if a search term in the search bar exists and if a search term exists it removes
+  the banner image from the page.
++ All the infomation from the useHomefetch hook is stored under the state object.
++ We are also giving the Banner Image tag the url from which to get the banner image
++ Here we are using the id , orginal_title , overview , release_date , vote_count and vote_average
+  from the state object and displaying them in the banner.
+#+begin_src js
+      {!searchTerm && state.results[banner1] && state? (
+        <BannerImage
+          clickable={true}
+          movieId={state.results[banner1].id}
+          image={`${IMAGE_BASE_URL}${BACKDROP_SIZE}${state.results[banner1].backdrop_path}`}
+          title={state.results[banner1].original_title}
+          text={state.results[banner1].overview}
+          release_date={state.results[banner1].release_date}
+          vote_count={state.results[banner1].vote_count}
+          stars={state.results[banner1].vote_average}
+        />
+      ) : null}
+#+end_src
+#+ATTR_HTML: :width 500px
+[[file:BannerImage/BannerImage_README.org][file:../../../Readme-resources/Home/BannerImage-presentation.png]]
+**** Search Bar
+Here we are using the Search bar tag to display a search bar in the home page
+When we type anything in the search bar it passes on that value to the use Home hook which
+then uses that search term and search for movies for that name.
+#+begin_src js
+      <Searchbar setSearchTerm={setSearchTerm}/>
+#+end_src
+#+ATTR_HTML: :width 1000px
+[[file:SearchBar/SearchBar_README.org][file:../../../Readme-resources/Home/SearchbarImage-presentation.png]]
+**** Grid and Thumbnail
+Here are defining the layout of the page with the grid tag
++ The header changes it value to Search Result when ever there is a search term
++ We are using the map function ([[https://www.w3schools.com/jsref/jsref_map.asp][Map function]]) to return the thumbnail of the movies in order of ~movieId={movie.id}~ which are inside the movie array.
++ We are also passing the image url and other required variable from movie to the thumbnail tag.
+#+begin_src js
+      <Grid header={searchTerm ? 'Search Result' : 'Popular Movies'}>
+        {state.results.map(
+          movie => (
+          <Thumbnail key={movie.id}
+            clickable={true}
+            image={
+              movie.poster_path ? `${IMAGE_BASE_URL}${POSTER_SIZE}${movie.poster_path}`: NoImage
+            }
+            movieId={movie.id}
+          />
+          ))}
+      </Grid>
+#+end_src
+***** layout
+#+ATTR_HTML: :width 1000px
+[[file:../Common/Grid/Grid_README.org][file:../../../Readme-resources/Common/Grid-presentation.png]]
+***** Thumbnail
+#+ATTR_HTML: :width 300px
+[[file:../Common/Thumbnail/thumbnail_README.org][file:../../../Readme-resources/Common/Thumbnail-presentation.png]]
+
+**** Spinner
+We are checking if the loading variable is true or false and if it is true then we are showing
+the spinner tag
+#+begin_src js
+      {loading && <Spinner />}
+#+end_src
+[[file:../Common/Spinner/Spinner_README.org][file:../../../Readme-resources/Common/Spinner-presentation.png]]
+**** Button
+Here we are showing a "Load More" Button in the bottom which we clicked call the setIsLoadinMore function
+which request more movies from the useHomeFetch hook which further that request to the API.
+#+begin_src js
+      {state.page < state.total_pages && !loading && (
+        <Button text='Load More' callback={() => setIsLoadinMore(true)}/>
+      )}
+#+end_src
+#+ATTR_HTML: :width 100px
+[[file:../Common/Button/Button_README.org][file:../../../Readme-resources/Common/Button-presentation.png]]
+*** Exporting
+Here we are exporing the home component so that we can call on this component from other file
+#+begin_src js
+export default Home;
+#+end_src
+* Other components
+** Header Component
+#+ATTR_HTML: :width 1000px
+[[file:../Common/Header/Header_README.org][file:../../../Readme-resources/Common/header-presentation.png]]
+** Footer
+#+ATTR_HTML: :width 1000px
+[[file:../Common/Footer/Footer_README.org][file:../../../Readme-resources/Common/footer-presentation.png]]
